@@ -7,14 +7,6 @@ const stop_button = document.getElementById("stopbtn");
 const tune_selector = document.getElementById("tunesDrop");
 const name_input = document.getElementById("recordName");
 
-let tune_array = [];
-let recording = false;
-let input_on = true;
-let recording_start_time;
-
-let tune = [];
-let tune_note;
-
 const keys = [
     "a",
     "w",
@@ -35,10 +27,18 @@ const keys = [
     ";",
 ];
 
+let tune_array = [];
+let recording = false;
+let input_on = true;
+let recording_start_time;
+
+let tune = [];
+let tune_note;
+
 const playNote = async (note, duration = "8n", timing = 0) => {
     await Tone.start();
     synth.triggerAttackRelease(note, duration, timing);
-    if (recording === true) {
+    if (recording) {
         tune_note = {
             note: note,
             duration: duration,
@@ -61,7 +61,7 @@ const stop_record = async () => {
     record_button.disabled = false;
 
     if (tune.length !== 0) {
-        const response = await axios.post(url, {
+        await axios.post(url, {
             id: 0,
             name: get_tune_name(),
             tune: tune,
@@ -74,32 +74,12 @@ const stop_record = async () => {
 };
 
 const get_tune_name = () => {
-    if (name_input.value.length === 0) {
+    if (name_input.value === "") {
         return "No-name Tune";
     } else {
         return name_input.value;
     }
 };
-
-keyboard.addEventListener("mousedown", (button) => {
-    const now = Tone.now();
-    playNote(button.target.id, "8n", now);
-});
-
-window.onkeydown = function (keypress) {
-    if (keys.includes(keypress.key) && input_on && !keypress.repeat) {
-        const key_index = keys.indexOf(keypress.key);
-        const now = Tone.now();
-        playNote(keyboard.children[key_index].id, "8n", now);
-    }
-};
-
-name_input.addEventListener("focusin", () => {
-    input_on = false;
-});
-name_input.addEventListener("focusout", () => {
-    input_on = true;
-});
 
 const getAllTunes = async () => {
     try {
@@ -129,5 +109,25 @@ const playTune = () => {
         playNote(note.note, note.duration, now + note.timing);
     });
 };
+
+keyboard.addEventListener("mousedown", (button) => {
+    const now = Tone.now();
+    playNote(button.target.id, "8n", now);
+});
+
+window.onkeydown = (keypress) => {
+    if (keys.includes(keypress.key) && input_on && !keypress.repeat) {
+        const key_index = keys.indexOf(keypress.key);
+        const now = Tone.now();
+        playNote(keyboard.children[key_index].id, "8n", now);
+    }
+};
+
+name_input.addEventListener("focusin", () => {
+    input_on = false;
+});
+name_input.addEventListener("focusout", () => {
+    input_on = true;
+});
 
 getAllTunes();
